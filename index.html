@@ -25,18 +25,20 @@
   //===================================================== camera
   var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000000);
 
-
+    
+  //===================================================== controls
   const controls = new THREE.OrbitControls( camera, renderer.domElement );
 	//controls.update() must be called after any manual changes to the camera's transform
 	camera.position.z = 200;
-  	camera.position.y = 1.5;
+  camera.position.y = 1.5;
 	controls.update();
 
   //===================================================== lights
-  const light = new THREE.AmbientLight( 0x404040, 5 ); // soft white light
+  const light =new THREE.PointLight( 0xffffff, 100, 200 );
   scene.add(light);
 
-
+  const light2 = new THREE.AmbientLight( 0x404040, 5 ); // soft white light
+  scene.add(light2);
 
   //===================================================== resize
   window.addEventListener("resize", function() {
@@ -48,77 +50,55 @@
   });
 
 
-  //===================================================== earth
-  var loader = new THREE.GLTFLoader();
-  var mixer;
-  var earth;
-  loader.load(
-    "./models/earth.glb", function(gltf) {
 
-       gltf.scene.traverse( function( node ) {
+
+    //===================================================== models
+
+    const planets = [
+      {
+        url: "./models/sun.glb",
+        scene: undefined,
+        scale: [.2,.2,.2],
+        distance: 0,
+        rotation: [0, 0, 0]
+      },
+      {
+        url: "./models/earth.gltf",
+        scene: undefined,
+        scale: [.1,.1,.1],
+        rotation: [0.01, 0, 0.01],
+        distance: 200,
+        speed: 200
+      },
+      {
+        url: "./models/saturn.glb",
+        scene: undefined,
+        scale: [.1,.1,.1],
+        rotation: [0, 0.01, 0],
+        distance: 400,
+        speed: 100
+      },
+    ]
+
+    //===================================================== load models
+    const loader = new THREE.GLTFLoader();
+    let mixer;
+    for (const planet of planets) {
+      loader.load(planet.url, (gltf) => {
+
+        gltf.scene.traverse(( node ) => {
           if ( node instanceof THREE.Mesh ) { 
             node.castShadow = true; 
             node.material.side = THREE.DoubleSide;
           }
         });
-
-       
-      earth = gltf.scene;
-	 
-      earth.scale.set(.1,.1,.1);
-      scene.add(earth);
-
- 
-  });
-
-    //===================================================== earth
-  var loader = new THREE.GLTFLoader();
-  var mixer;
-  var saturn;
-  loader.load(
-    "./models/saturn.glb", function(gltf) {
-
-       gltf.scene.traverse( function( node ) {
-          if ( node instanceof THREE.Mesh ) { 
-            node.castShadow = true; 
-            node.material.side = THREE.DoubleSide;
-          }
-        });
-
-       
-	  saturn = gltf.scene;
-	 
-      saturn.scale.set(.1,.1,.1);
-	  saturn.position.set(100,.1,.1);
-      scene.add(saturn);
-
- 
-  });
-
-
-  var loader = new THREE.GLTFLoader();
-  var mixer;
-  var sun;
-  loader.load(
-    "./models/sun.glb", function(gltf) {
-
-       gltf.scene.traverse( function( node ) {
-          if ( node instanceof THREE.Mesh ) { 
-            node.castShadow = true; 
-            node.material.side = THREE.DoubleSide;
-          }
-        });
-
-       
-	  sun = gltf.scene;
-	 
-      sun.scale.set(.1,.1,.1);
-	  sun.position.set(100,.1,.1);
-      scene.add(sun);
-
- 
-  });
-
+        planet.scene = gltf.scene;
+    
+        planet.scene.scale.set(planet.scale[0],planet.scale[1],planet.scale[2]);
+        planet.scene.position.set(planet.distance,0,0);
+        scene.add(planet.scene);
+      });
+    }
 
 
 //===================================================== animate
@@ -127,10 +107,26 @@ function render() {
   requestAnimationFrame(render);
   var delta = clock.getDelta();
   if (mixer != null) mixer.update(delta);
-	if (earth) {
-		earth.rotation.z -= 0.01;
-		earth.rotation.x -= 0.01;
-	}
+  let time = Date.now();
+  
+
+  for (const planet of planets) {
+    if (planet.scene && planet.distance) {
+		  planet.scene.rotation.x += planet.rotation[0];
+      planet.scene.rotation.y += planet.rotation[1];
+      planet.scene.rotation.z += planet.rotation[2];
+
+      let value = planet.speed;
+      let orbitRte = 10.2;//365
+      let distanceAxe = planet.distance; 
+      
+
+      planet.scene.position.x = Math.cos(time*(1.0/(orbitRte * value))+10.0 )* distanceAxe ;
+      planet.scene.position.z = Math.sin(time*(1.0/(orbitRte * value))+10.0 )* distanceAxe ;
+
+    }
+  }
+
 
 	controls.update();
 
