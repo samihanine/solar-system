@@ -14,27 +14,25 @@
 	<body>
 
 		<script type="module">
- //===================================================== canvas
- var renderer = new THREE.WebGLRenderer({ alpha: true, antialiase: true });
+  //===================================================== scence
+  var renderer = new THREE.WebGLRenderer({ alpha: true, antialiase: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  //===================================================== scene
   var scene = new THREE.Scene();
 
-  //===================================================== camera
   var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000000);
-
+  
     
   //===================================================== controls
   const controls = new THREE.OrbitControls( camera, renderer.domElement );
-	//controls.update() must be called after any manual changes to the camera's transform
 	camera.position.z = 200;
   camera.position.y = 1.5;
+  controls.maxDistance = 700;
 	controls.update();
 
   //===================================================== lights
-  const light =new THREE.PointLight( 0xffffff, 100, 200 );
+  const light = new THREE.PointLight( 0xffffff, 100, 200 );
   scene.add(light);
 
   const light2 = new THREE.AmbientLight( 0x404040, 5 ); // soft white light
@@ -49,8 +47,14 @@
     camera.updateProjectionMatrix();
   });
 
-
-
+  //===================================================== stars
+  var geometry = new THREE.SphereGeometry( 4000, 600, 400 );
+  geometry.scale( - 1, 1, 1 );
+  var material = new THREE.MeshBasicMaterial( {
+    map: new THREE.TextureLoader().load( './stars.jpg' )
+  } );
+  var mesh = new THREE.Mesh( geometry, material );
+  scene.add( mesh );
 
     //===================================================== models
 
@@ -63,7 +67,7 @@
         rotation: [0, 0, 0]
       },
       {
-        url: "./models/earth.gltf",
+        url: "./models/earth.glb",
         scene: undefined,
         scale: [.1,.1,.1],
         rotation: [0.01, 0, 0.01],
@@ -76,6 +80,14 @@
         scale: [.1,.1,.1],
         rotation: [0, 0.01, 0],
         distance: 400,
+        speed: 100
+      },
+      {
+        url: "./models/mars.glb",
+        scene: undefined,
+        scale: [.1,.1,.1],
+        rotation: [0, 0.01, 0],
+        distance: 700,
         speed: 100
       },
     ]
